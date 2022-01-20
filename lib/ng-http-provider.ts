@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
 import { AjaxOptions, AjaxResponse, IAjaxProvider, mergeAjaxOptions, Value } from "jinqu";
 
 export class AngularHttpProvider implements IAjaxProvider<Response> {
@@ -24,47 +24,38 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
         // WithCredentials
         //let ngWithCredentials = o.credentials && o.credentials == "include" ? true : false;
 
-        const promise = new Promise<Value<T> & AjaxResponse<Response>>((resolve, reject) => {
+        const promise = this.http.request(<string>o.method, <string>o.url, {
+            body: JSON.stringify(o.data),
+            headers: o.headers,
+            observe: 'response',
+            reportProgress: false,
+            responseType: 'blob',
+            //withCredentials: ngWithCredentials
+        }).toPromise()
+            .then((ngResponse: HttpResponse<Blob>) => {
+                let respHeaders = new Headers();
+                ngResponse.headers.keys().forEach((key: string) => {
+                    respHeaders.append(key, <string>ngResponse.headers.get(key));
+                });
 
-            this.http.request(<string>o.method, <string>o.url, {
-                body: JSON.stringify(o.data),
-                headers: o.headers,
-                observe: 'response',
-                reportProgress: false,
-                responseType: 'blob',
-                //withCredentials: ngWithCredentials
-            })
-                .subscribe(
-                    (ngResponse: HttpResponse<Blob>): void => {
-                        let respHeaders = new Headers();
-                        ngResponse.headers.keys().forEach((key: string) => {
-                            respHeaders.append(key, <string>ngResponse.headers.get(key));
-                        });
+                let response = new Response(ngResponse.body, {
+                    headers: respHeaders,
+                    status: ngResponse.status,
+                    statusText: ngResponse.statusText
+                });
 
-                        let response = new Response(ngResponse.body, {
-                            headers: respHeaders,
-                            status: ngResponse.status,
-                            statusText: ngResponse.statusText
-                        });
-
-                        response.json()
-                            .then((value: any) => {
-                                resolve({ value, response });
-                            });
-                        /*ngResponse.body.text()
-                          .then((txtVal: string) => {
-                            resolve({ value: JSON.parse(txtVal), response });
-                          });
-                        */
-                    },
-                    (error: HttpErrorResponse): void => {
-                        reject(error.error);
-                    }
-                )
-        });
+                // body stream read
+                return response.json()
+                    .then((value: T) => ({ value, response }));
+                    
+                // body stream NOT read
+                /*return ngResponse.body?.text()
+                    .then((txtVal: string) => ({ value: JSON.parse(txtVal), response });
+                */
+            });
 
         if (!o.timeout) {
-            return promise;
+            return promise as any;
         }
 
         return Promise.race([
