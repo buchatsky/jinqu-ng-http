@@ -21,7 +21,7 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
         const d = Object.assign({}, AngularHttpProvider.defaultOptions);
         o = mergeAjaxOptions(d, o);
 
-        // WithCredentials
+        // credentials (present in fetch RequestInit, absent in AjaxOptions)
         //let ngWithCredentials = o.credentials && o.credentials == "include" ? true : false;
 
         const promise = this.http.request(<string>o.method, <string>o.url, {
@@ -33,10 +33,14 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
             //withCredentials: ngWithCredentials
         }).toPromise()
             .then((ngResponse: HttpResponse<Blob>) => {
-                let respHeaders = new Headers();
+                // vanilla
+                /*let respHeaders = new Headers();
                 ngResponse.headers.keys().forEach((key: string) => {
-                    respHeaders.append(key, <string>ngResponse.headers.get(key));
+                    respHeaders.append(key, ngResponse.headers.get(key)!);
                 });
+                */
+                // hackish
+                let respHeaders = ngResponse.headers.keys().reduce(((ret, key: string) => (ret[key] = ngResponse.headers.get(key)) && ret), <any>{});
 
                 let response = new Response(ngResponse.body, {
                     headers: respHeaders,
