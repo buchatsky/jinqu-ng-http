@@ -1,19 +1,25 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "outDir": "./dist",
+    "baseUrl": ".",
+    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true,
-    "sourceMap": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "target": "es5",
+    "module": "es2015",
     "lib": [
       "es2015",
       "dom"
     ]
   },
-  "include": [
-    "./index.ts",
-    "./lib/**/*.ts"
+  "files": [
+    "index.ts"
   ]
 }

@@ -1,93 +1,44 @@
-import 'zone.js';  // Included with Angular CLI.
-import 'zone.js/dist/zone';  // Included with Angular CLI.
-import 'zone.js/dist/mocha-patch';
-//import 'zone.js/dist/proxy';
-import 'zone.js/dist/zone-testing';
-
-import { getTestBed } from '@angular/core/testing';
-import {
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting
-} from '@angular/platform-browser-dynamic/testing';
-
 import { HttpClient } from '@angular/common/http';
-import { TestBed, waitForAsync/*, fakeAsync*/ } from '@angular/core/testing';
+// waitForAsync is used if the test body contains async calls, no need in Jasmine's done()
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import 'mocha';
-import { expect } from 'chai';
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
-//import fetchMock = require('fetch-mock');
-//import 'whatwg-fetch';
+import { AngularHttpProvider } from '../index';
+import { UrlResolver } from '@angular/compiler';
+//import { AngularHttpProvider } from '../lib/ng-http-provider';
 
-import { AngularHttpProvider } from '..';
-
-// First, initialize the Angular testing environment.
-getTestBed().initTestEnvironment(
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting()
-);
-
-chai.use(chaiAsPromised)
 const emptyResponse = {};
 
-describe('Fetch tests', () => {
+describe('HttpClient tests', () => {
 
-/*    TestBed.configureTestingModule({
-        imports: [ HttpClientTestingModule ]
-    });//.compileComponents();
-*/
     let httpMock: HttpTestingController;
     let http: HttpClient;
+    let fetchProvider: AngularHttpProvider;
 
     beforeEach(waitForAsync(() => {
-    //beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ]
-        }).compileComponents();
+        });
 
         httpMock = TestBed.inject(HttpTestingController);
         http = TestBed.inject(HttpClient);
+        fetchProvider = new AngularHttpProvider(http);
     }));
 
-/*    afterEach(() => {
+    afterEach(waitForAsync(() => {
         httpMock.verify();
-    });
-*/
-    it('should set url', (() => {
-    //it('should set url', async () => {
-    //it('should set url', waitForAsync(async() => {
-    //it('should set url', fakeAsync(() => {
-    //it('should set url', waitForAsync(() => {
-        httpMock = TestBed.inject(HttpTestingController);
-        http = TestBed.inject(HttpClient);
+    }));
 
+    it('should set url', waitForAsync(() => {
         const query = {
             '$where': 'o => o.id > 5',
             '$orderBy': 'o => o.id',
             '$skip': '10',
             '$take': '10'
         };
-        const url = 'Companies?' + Object.keys(query).map((key) => `${key}=${encodeURIComponent(query[key])}`).join("&");
-        const req = httpMock.expectOne(url);
-        expect(req.request.method).eq("GET"); // ??
-        req.flush(emptyResponse);
+        const url = 'Companies?' + Object.keys(query).map((key) =>
+            `${key}=${encodeURIComponent((<any>query)[key])}`).join("&");
 
-        const fetchProvider = new AngularHttpProvider(http);
-/*        const r = await fetchProvider.ajax({
-            url: 'Companies',
-            params: [
-                { key: '$where', value: 'o => o.id > 5' },
-                { key: '$orderBy', value: 'o => o.id' },
-                { key: '$skip', value: '10' },
-                { key: '$take', value: '10' }
-            ]
-        });
-
-        expect(r.value).deep.equal(emptyResponse);
-        expect(req.request.method).to.equal('GET');
-*/
         fetchProvider.ajax({
             url: 'Companies',
             params: [
@@ -96,61 +47,58 @@ describe('Fetch tests', () => {
                 { key: '$skip', value: '10' },
                 { key: '$take', value: '10' }
             ]
-        }).then(r => {
-            expect(r.value).deep.equal(emptyResponse);
-            expect(req.request.method).to.equal('GET');
         })
-
-        //fetchMock.restore();
-        //httpMock.verify();
-    }));
-/*
-    it('should return null', async () => {
-        fetchMock.get(
-            'Companies',
-            {
-                body: 'null'
-            },
-            {
-                method: 'GET',
-                overwriteRoutes: false
-            }
-        );
-
-        const fetchProvider = new AngularHttpProvider(http);
-        const r = await fetchProvider.ajax({
-            url: 'Companies'
-        });
-
-        expect(r.value).to.be.null;
-
-        fetchMock.restore();
-    });
-
-    it('should throw when timeout elapsed', async () => {
-        fetchMock.get(
-            'Companies',
-            new Promise((r, _) => setTimeout(() => r(emptyResponse), 10)),
-            {
-                method: 'GET',
-                overwriteRoutes: false
-            }
-        );
-
-        const fetchProvider = new AngularHttpProvider(http);
-
-        try {
-            await fetchProvider.ajax({
-                url: 'Companies',
-                timeout: 1
+            .then(r => {
+                expect(r.value).toEqual(emptyResponse);
+                expect(reqMock.request.method).toEqual('GET');
             });
-            expect.fail('Should have failed because of timeout');
-        }
-        catch (e) {
-            expect(e).to.has.property('message', 'Request timed out');
-        }
 
-        fetchMock.restore();
-    });
-*/
+        const reqMock = httpMock.expectOne({
+            method: 'GET',
+            url: url
+        });
+        reqMock.flush(
+            new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' })
+        );
+    }));
+
+    it('should return null', waitForAsync(() => {
+        const url = 'Companies';
+
+        fetchProvider.ajax({
+            url: url,
+        })
+            .then(r => {
+                expect(r.value).toBeNull();
+            });
+
+        const reqMock = httpMock.expectOne({
+            method: 'GET',
+            url: url
+        });
+        reqMock.flush(
+            new Blob([JSON.stringify(null)], { type: 'application/json' })
+        );
+
+    }));
+
+    it('should throw when timeout elapsed', waitForAsync(() => {
+        const url = 'Companies';
+
+        let prom = fetchProvider.ajax({
+            url: url,
+            timeout: 1
+        });
+        expectAsync(prom).toBeRejectedWithError('Request timed out');
+
+        const reqMock = httpMock.expectOne({
+            method: 'GET',
+            url: url
+        });
+        setTimeout(() => {
+            reqMock.flush(
+                new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' })
+            );
+        }, 10);        
+    }));
 });

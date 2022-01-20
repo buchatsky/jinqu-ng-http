@@ -26,7 +26,7 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
 
         const promise = new Promise<Value<T> & AjaxResponse<Response>>((resolve, reject) => {
 
-            this.http.request(o.method, o.url, {
+            this.http.request(<string>o.method, <string>o.url, {
                 body: JSON.stringify(o.data),
                 headers: o.headers,
                 observe: 'response',
@@ -35,10 +35,10 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
                 //withCredentials: ngWithCredentials
             })
                 .subscribe(
-                    (ngResponse: HttpResponse<Blob>) => {
+                    (ngResponse: HttpResponse<Blob>): void => {
                         let respHeaders = new Headers();
                         ngResponse.headers.keys().forEach((key: string) => {
-                            respHeaders.append(key, ngResponse.headers.get(key));
+                            respHeaders.append(key, <string>ngResponse.headers.get(key));
                         });
 
                         let response = new Response(ngResponse.body, {
@@ -54,16 +54,17 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
                         /*ngResponse.body.text()
                           .then((txtVal: string) => {
                             resolve({ value: JSON.parse(txtVal), response });
-                          });*/
+                          });
+                        */
                     },
-                    (error: HttpErrorResponse) => {
+                    (error: HttpErrorResponse): void => {
                         reject(error.error);
                     }
                 )
         });
 
         if (!o.timeout) {
-            return promise as any;
+            return promise;
         }
 
         return Promise.race([
