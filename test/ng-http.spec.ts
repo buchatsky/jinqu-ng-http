@@ -4,7 +4,6 @@ import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 import { AngularHttpProvider } from '../index';
-import { UrlResolver } from '@angular/compiler';
 //import { AngularHttpProvider } from '../lib/ng-http-provider';
 
 const emptyResponse = {};

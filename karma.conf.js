@@ -12,9 +12,9 @@ module.exports = function (config) {
       require('karma-coverage')
     ],
     files: [
-      'index.ts',
-      'lib/**/*.ts',
       'test/test-init.ts',
+      'lib/**/*.ts',
+      'index.ts',
       'test/**/*.spec.ts'
     ],
     preprocessors: {

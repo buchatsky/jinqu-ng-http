@@ -32,7 +32,10 @@ export class AngularHttpProvider implements IAjaxProvider<Response> {
             responseType: 'blob',
             //withCredentials: ngWithCredentials
         }).toPromise()
-            .then((ngResponse: HttpResponse<Blob>) => {
+            .then((ngResponse?: HttpResponse<Blob>) => {
+                if (!ngResponse) {
+                    return Promise.reject(new Error("Request failed"));
+                }
                 // vanilla
                 /*let respHeaders = new Headers();
                 ngResponse.headers.keys().forEach((key: string) => {
