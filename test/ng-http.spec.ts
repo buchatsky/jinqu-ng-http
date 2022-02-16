@@ -14,7 +14,10 @@ describe('HttpClient tests', () => {
     let http: HttpClient;
     let fetchProvider: AngularHttpProvider;
 
-    beforeEach(waitForAsync(() => {
+    //beforeEach(waitForAsync(() => {
+    beforeEach((() => {
+        //TestBed.resetTestEnvironment();
+
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ]
         });
@@ -24,11 +27,13 @@ describe('HttpClient tests', () => {
         fetchProvider = new AngularHttpProvider(http);
     }));
 
-    afterEach(waitForAsync(() => {
+    //afterEach(waitForAsync(() => {
+    afterEach((() => {
         httpMock.verify();
     }));
 
-    it('should get http headers & value', waitForAsync(() => {
+    //it('should get http headers & value', waitForAsync(() => {
+    it('should get http headers & value', ((done) => {
         const url = 'Companies';
 
         fetchProvider.ajax({
@@ -39,6 +44,8 @@ describe('HttpClient tests', () => {
                 expect(r.response.headers.get('content-type')).toEqual('application/json');
                 expect(r.response.headers.get('content-length')).toEqual('2');
                 expect(reqMock.request.method).toEqual('GET');
+
+                done();
             });
 
         const reqMock = httpMock.expectOne({
@@ -51,7 +58,8 @@ describe('HttpClient tests', () => {
         );
     }));
 
-    it('should return null', waitForAsync(() => {
+    //it('should return null', waitForAsync(() => {
+    it('should return null', ((done) => {
         const url = 'Companies';
 
         fetchProvider.ajax({
@@ -59,6 +67,8 @@ describe('HttpClient tests', () => {
         })
             .then(r => {
                 expect(r.value).toBeNull();
+
+                done();
             });
 
         const reqMock = httpMock.expectOne({
@@ -68,16 +78,20 @@ describe('HttpClient tests', () => {
         reqMock.flush(
             new Blob([JSON.stringify(null)], { type: 'application/json' })
         );
-
     }));
 
-    it('should throw when timeout elapsed', waitForAsync(() => {
+    //it('should throw when timeout elapsed', waitForAsync(() => {
+    it('should throw when timeout elapsed', ((done) => {
         const url = 'Companies';
 
         let prom = fetchProvider.ajax({
             url: url,
             timeout: 1
+        })
+        .finally(() => {
+            done();
         });
+
         expectAsync(prom).toBeRejectedWithError('Request timed out');
 
         const reqMock = httpMock.expectOne({

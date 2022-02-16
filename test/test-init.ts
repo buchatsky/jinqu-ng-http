@@ -1,7 +1,9 @@
 // This file is required by karma.conf.js
+
 import 'zone.js';
 import 'zone.js/testing';
-import { getTestBed } from '@angular/core/testing';
+import { getTestBed, waitForAsync } from '@angular/core/testing';
+
 import {
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting
