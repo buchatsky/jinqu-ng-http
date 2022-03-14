@@ -7,6 +7,7 @@ module.exports = function (config) {
     frameworks: [
       'jasmine', 
       'webpack',
+      //'sourcemap'
     ],
     plugins: [
       require('karma-webpack'),
@@ -17,29 +18,46 @@ module.exports = function (config) {
       require('karma-sourcemap-loader'),
     ],
     files: [
+      //'test/test-init.ts',
+      //'lib/**/*.ts',
+      //'index.ts',
+      //'test/**/*.spec.ts'
       { pattern: 'test/test.ts', watched: false }
     ],
     preprocessors: {
-      "test/test.ts": ['webpack'],
+      "**/*.ts": ['webpack'],
+      //"test/test.ts": ['webpack']
       "**/*.js": ['sourcemap']
     },
     webpack: {
+      // karma watches the test entry points
+      // Do NOT specify the entry option
+      // webpack watches dependencies
+
       // webpack configuration
       devtool: 'inline-source-map',
+      //entry: {
+      //  main: './test/test.ts'
+      //},
       output: {
+        //filename: '[name].js',
         path: path.join(__dirname, 'temp'),
         clean: true,
       },
       resolve: {
+        // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ['.ts', '.js'],
+        //modules: [NODEDIR],
         //symlinks: true
       },
       module: {
         rules: [
           {
             test: /\.ts$/i,
-            loader: 'ts-loader', 
-          },
+            use: [
+              'ts-loader', 
+          ]
+    },
         ]
       }  
     },
@@ -53,7 +71,7 @@ module.exports = function (config) {
       suppressAll: true // removes the duplicated traces
     },
     coverageReporter: {
-      //dir: require('path').join(__dirname, './coverage/jinqu-ng-http'),
+      //dir: require('path').join(__dirname, './coverage/ng12-hello'),
       //subdir: '.',
       reporters: [
         { type: 'html' },
@@ -70,12 +88,11 @@ module.exports = function (config) {
     singleRun: false,
     restartOnFileChange: true,
 
-    // debug
     customLaunchers: {
       ChromeHeadless: {
           base: 'Chrome',
           flags: [
-              "--no-sandbox",
+              //"--no-sandbox",
               //"--user-data-dir=/tmp/chrome-test-profile",
               "--disable-web-security",
               //"--remote-debugging-address=0.0.0.0",

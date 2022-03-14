@@ -76,3 +76,6 @@ dist/
 
 .DS_Store
 test_results
+
+#temp
+temp/*

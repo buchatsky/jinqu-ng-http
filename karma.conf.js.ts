@@ -1,47 +1,40 @@
 // Karma configuration file
-const path = require('path');
 
 module.exports = function (config) {
   config.set({
     basePath: '',
     frameworks: [
       'jasmine', 
-      'webpack',
+      'karma-typescript'
     ],
     plugins: [
-      require('karma-webpack'),
+      require('karma-typescript'),
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
-      require('karma-coverage'),
-      require('karma-sourcemap-loader'),
+      require('karma-coverage')
     ],
     files: [
-      { pattern: 'test/test.ts', watched: false }
+      'test/test-init.ts',
+      'lib/**/*.ts',
+      'index.ts',
+      'test/**/*.spec.ts'
     ],
     preprocessors: {
-      "test/test.ts": ['webpack'],
-      "**/*.js": ['sourcemap']
+      "**/*.ts": ["karma-typescript"]
     },
-    webpack: {
-      // webpack configuration
-      devtool: 'inline-source-map',
-      output: {
-        path: path.join(__dirname, 'temp'),
-        clean: true,
+    karmaTypescriptConfig: {
+      tsconfig: "./tsconfig.json",
+      bundlerOptions: {
+        entrypoints: /\.spec\.ts$/ ,
+        transforms: [require("karma-typescript-es6-transform")()]
       },
-      resolve: {
-        extensions: ['.ts', '.js'],
-        //symlinks: true
+      compilerOptions: {
+        module: "commonjs"
       },
-      module: {
-        rules: [
-          {
-            test: /\.ts$/i,
-            loader: 'ts-loader', 
-          },
-        ]
-      }  
+      include: [
+        "test/**/*.ts"
+      ]
     },
     client: {
       jasmine: {
@@ -53,7 +46,7 @@ module.exports = function (config) {
       suppressAll: true // removes the duplicated traces
     },
     coverageReporter: {
-      //dir: require('path').join(__dirname, './coverage/jinqu-ng-http'),
+      //dir: require('path').join(__dirname, './coverage/ng12-hello'),
       //subdir: '.',
       reporters: [
         { type: 'html' },
@@ -70,12 +63,11 @@ module.exports = function (config) {
     singleRun: false,
     restartOnFileChange: true,
 
-    // debug
     customLaunchers: {
       ChromeHeadless: {
           base: 'Chrome',
           flags: [
-              "--no-sandbox",
+              //"--no-sandbox",
               //"--user-data-dir=/tmp/chrome-test-profile",
               "--disable-web-security",
               //"--remote-debugging-address=0.0.0.0",
