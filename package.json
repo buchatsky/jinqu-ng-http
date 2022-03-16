@@ -1,6 +1,6 @@
 {
   "name": "jinqu-ng-http",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Jinqu Angular HttpClient implementation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,7 +30,7 @@
     "watch": "rimraf dist | tsc --watch",
     "test": "karma start"
   },
-  "author": "Umut Özel",
+  "author": "Alex Buchatsky",
   "license": "MIT",
   "devDependencies": {
     "@types/jasmine": "~3.6.0",
@@ -53,11 +53,11 @@
     "webpack": "^5.70.0"
   },
   "dependencies": {
-    "@angular/common": "^13.2.6",
-    "@angular/compiler": "^13.2.6",
-    "@angular/core": "^13.2.6",
-    "@angular/platform-browser": "^13.2.6",
-    "@angular/platform-browser-dynamic": "^13.2.6",
+    "@angular/common": "^12.2.16 || ^13.0.0",
+    "@angular/compiler": "^12.2.16 || ^13.0.0",
+    "@angular/core": "^12.2.16 || ^13.0.0",
+    "@angular/platform-browser": "^12.2.16 || ^13.0.0",
+    "@angular/platform-browser-dynamic": "^12.2.16 || ^13.0.0",
     "@types/log4js": "^2.3.5",
     "jinqu": "^1.1.3",
     "log4js": "^6.4.2",
