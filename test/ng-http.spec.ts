@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { AngularHttpProvider } from '../index';
-//import { AngularHttpProvider } from '../lib/ng-http-provider';
+import { AngularHttpProvider, JsonDateConverter, JsonDateOnlyConverter, JsonDateTimeOffsetConverter } from '../index';
+import { JsonTestConverter } from './fixture';
 
 const emptyResponse = {};
 
@@ -12,28 +12,29 @@ describe('HttpClient tests', () => {
 
     let httpMock: HttpTestingController;
     let http: HttpClient;
-    let fetchProvider: AngularHttpProvider;
+    //let fetchProvider: AngularHttpProvider;
 
-    //beforeEach(waitForAsync(() => {
-    beforeEach((() => {
+    // must be waitForAsync'ed if tests are waitForAsync'ed
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ],
-            //providers: [ AngularHttpProvider ]
+            //providers: [ AngularHttpProvider ] // if @Inject'ed
         });
 
         httpMock = TestBed.inject(HttpTestingController);
         http = TestBed.inject(HttpClient);
-        fetchProvider = new AngularHttpProvider(http);
+        //fetchProvider = new AngularHttpProvider(http);
     }));
 
-    //afterEach(waitForAsync(() => {
-    afterEach((() => {
+    // must be waitForAsync'ed if tests are waitForAsync'ed
+    afterEach(waitForAsync(() => {
         httpMock.verify();
     }));
 
     it('should get http headers & value', waitForAsync(() => {
-        const url = 'Companies';
+        const fetchProvider = new AngularHttpProvider(http);
 
+        const url = 'Companies';
         fetchProvider.ajax({ url })
             .then(r => {
                 expect(r.value).toEqual(emptyResponse);
@@ -50,8 +51,9 @@ describe('HttpClient tests', () => {
     }));
 
     it('should return null value', waitForAsync(() => {
-        const url = 'Companies';
+        const fetchProvider = new AngularHttpProvider(http);
 
+        const url = 'Companies';
         fetchProvider.ajax({ url })
             .then(r => {
                 expect(r.value).toBeNull();
@@ -65,8 +67,9 @@ describe('HttpClient tests', () => {
     }));
 
     it('should return undefined value', waitForAsync(() => {
-        const url = 'Companies';
+        const fetchProvider = new AngularHttpProvider(http);
 
+        const url = 'Companies';
         fetchProvider.ajax({ method: 'PUT', url })
             .then(r => {
                 expect(r.value).toBeUndefined();
@@ -77,10 +80,11 @@ describe('HttpClient tests', () => {
     }));
 
     it('should throw when timeout elapsed', waitForAsync(() => {
-        const url = 'Companies';
+        const fetchProvider = new AngularHttpProvider(http);
 
-        let prom = fetchProvider.ajax({
-            url: url,
+        const url = 'Companies';
+        const prom = fetchProvider.ajax({
+            url,
             timeout: 1
         });
         expectAsync(prom).toBeRejectedWithError('Request timed out');
@@ -91,6 +95,119 @@ describe('HttpClient tests', () => {
                 new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' })
             );
         }, 10);
+    }));
+
+    it('should revive any Date in response', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http, JsonDateConverter);
+
+        const url = 'Companies(123)';
+        const resIn = {
+            id: 123,
+            dateOnly: '2012-07-31',
+            dtOffset: '2017-11-08T21:33:01.009+02:00',
+            dtInvalid: '2012-13-31'
+        };
+        const resOut = {
+            id: resIn.id,
+            dateOnly: new Date(resIn.dateOnly),
+            dtOffset: new Date(resIn.dtOffset),
+            dtInvalid: resIn.dtInvalid
+        };
+
+        fetchProvider.ajax({ url })
+            .then(r => {
+                expect(r.value).toEqual(resOut);
+                expect(reqMock.request.method).toEqual('GET');
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'GET', url });
+        reqMock.flush(
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+        );
+    }));
+
+    it('should revive Date only in response', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http, JsonDateOnlyConverter);
+
+        const url = 'Companies(123)';
+        const resIn = {
+            id: 123,
+            dateOnly: '2012-07-31',
+            dtOffset: '2017-11-08T21:33:01.009+02:00',
+            dtInvalid: '2012-13-31'
+        };
+        const resOut = {
+            id: resIn.id,
+            dateOnly: new Date(resIn.dateOnly),
+            dtOffset: resIn.dtOffset,
+            dtInvalid: resIn.dtInvalid
+        };
+
+        fetchProvider.ajax({ url })
+            .then(r => {
+                expect(r.value).toEqual(resOut);
+                expect(reqMock.request.method).toEqual('GET');
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'GET', url });
+        reqMock.flush(
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+        );
+    }));
+
+    it('should revive DateTimeOffset only in response', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http, JsonDateTimeOffsetConverter);
+
+        const url = 'resource(123)';
+        const resIn = {
+            id: 123,
+            dateOnly: '2012-07-31',
+            dtOffset: '2017-11-08T21:33:01.009+02:00',
+            dtInvalid: '2012-13-31'
+        };
+        const resOut = {
+            id: resIn.id,
+            dateOnly: resIn.dateOnly,
+            dtOffset: new Date(resIn.dtOffset),
+            dtInvalid: resIn.dtInvalid
+        };
+
+        fetchProvider.ajax({ url })
+            .then(r => {
+                expect(r.value).toEqual(resOut);
+                expect(reqMock.request.method).toEqual('GET');
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'GET', url });
+        reqMock.flush(
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+        );
+    }));
+
+    it('should replace fld2 in request', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http, JsonTestConverter);
+
+        const url = 'resource(123)';
+        const resIn = {
+            id: 123,
+            fld1: 'Joan',
+            fld2: 'apple',
+        };
+        const resOut = {
+            id: 123,
+            fld1: 'Joan',
+            fld2: 'orange',
+        };
+
+        fetchProvider.ajax({ url, method: 'POST', data: resIn })
+            .then(r => {
+                expect(r.value).toEqual(void 0);
+                expect(reqMock.request.body).toEqual(JSON.stringify(resOut));
+                expect(reqMock.request.method).toEqual('POST');
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'POST', url });
+        reqMock.flush(null);
     }));
 
 });
