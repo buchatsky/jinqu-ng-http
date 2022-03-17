@@ -19,7 +19,7 @@ export class NorthwindContext extends ODataService {
   get products(): IODataQuery<Product> { return this.createQuery<Product>('products'); }
 }
 ```
-<h3>Date/Time values</h3>
+# Date/Time values
 By default jinqu-odata represents OData Date and DateTimeOffset values as strings. You may want to represent them as Date objects in your data model.
 JSON.stringify() automatically converts Date objects to ISO 8601 format with zero timezone when data is being sent, but JSON.parse() leaves dates as
 strings on reception.
@@ -38,7 +38,7 @@ Built-in converters makes conversion from string to Date object if a property va
 You may want to use [ts-odata-model-gen](https://github.com/buchatsky/ts-odata-model-gen) with --useDateProps option to generate data models with
 Edm.Date and Edm.DateTimeOffset fields as Date objects from OData service $metadata endpoint.
 
-<h3>Custom converter</h3>
+# Custom converter
 You can also write your own implementation of IJsonConverter interface in order to take full control over any data conversion upon sending or receiving:
 ```
 export class SomeJsonConverter {
