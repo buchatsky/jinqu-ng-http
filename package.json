@@ -1,6 +1,6 @@
 {
   "name": "jinqu-ng-http",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jinqu Angular HttpClient implementation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,10 +12,7 @@
     "typescript"
   ],
   "files": [
-    "dist",
-    "lib",
-    "index.ts",
-    "README.md"
+    "dist"
   ],
   "repository": {
     "type": "git",
