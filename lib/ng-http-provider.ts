@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpResponse } from "@angular/common/http";
 import { AjaxOptions, AjaxResponse, IAjaxProvider, mergeAjaxOptions, Value } from "jinqu";
 import { IJsonConverter } from "./json-converter";
 
@@ -71,6 +71,28 @@ export class AngularHttpProvider<TConverter extends IJsonConverter | void = void
                 /*return ngResponse.body?.text()
                     .then((txtVal: string) => ({ value: JSON.parse(txtVal), response });
                 */
+            },
+            (error: HttpErrorResponse) => {
+                if (error.status !== 0) {
+                    // backend error
+                    if (error.error && typeof error.error === "object") {
+                        return (error.error as Blob).text().then(strBody => {
+                            // error object
+                            let objBody = void 0;
+                            if (error.headers.get("content-type")?.split(';')[0] === "application/json") {
+                                objBody = JSON.parse(strBody);
+                            }
+                            throw new HttpErrorResponse({
+                                error: objBody ? objBody : strBody,
+                                headers: error.headers,
+                                status: error.status,
+                                statusText: error.statusText,
+                                url: error.url ? error.url : void 0
+                            });
+                        });
+                    }
+                }
+                throw error;
             });
 
         if (!o.timeout) {
