@@ -1,7 +1,6 @@
 // This file is required by karma.conf.js
 import 'zone.js';
 import 'zone.js/testing';
-//import 'reflect-metadata';
 
 import { getTestBed } from '@angular/core/testing';
 

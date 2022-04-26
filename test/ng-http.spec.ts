@@ -210,4 +210,31 @@ describe('HttpClient tests', () => {
         reqMock.flush(null);
     }));
 
+    it('should get odata error', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http);
+
+        const url = 'Companies';
+        const resErr = {
+            "error":{
+                "code":"400.101",
+                "message":"Field is required"
+            }
+        };
+
+        fetchProvider.ajax({ url })
+        .catch(e => {
+            expect(e.status).toEqual(400);
+            expect(e.error.error.code).toEqual("400.101");
+            expect(e.error.error.message).toEqual("Field is required");
+        });
+
+        const reqMock = httpMock.expectOne({ method: 'GET', url });
+        reqMock.flush(
+            new Blob([JSON.stringify(resErr)], {  type: 'application/json' }), { 
+                status: 400, 
+                statusText: 'Bad Request', 
+                headers: { 'content-type': 'application/json' } 
+            }
+        );
+    }));
 });
