@@ -61,3 +61,20 @@ export class SomeJsonConverter {
 }
 ```
 SomeJsonConverter.revive and SomeJsonConverter.replace will be passed as the second argument to JSON.parse() and JSON.stringify() respectively.
+
+# Error handling
+If an error is returned by the underlying service as an HTTP payload, jinqu-ng-http reads it from Blob and returns in HttpErrorResponse.error field.
+If the error is a JSON object, it is returned as an object. E.g. for OData v4 errors:
+```
+context.products().toArrayAsync()
+    .then((result: Product[]) => {
+        ...
+    }, (httpErr: HttpErrorResponse) => {
+        const errMsg = httpErr.error?.error ? `${httpErr.error.error.code} ${httpErr.error.error.message}` :
+            httpErr.message ? httpErr.message :
+                httpErr.status ? `${httpErr.status} ${httpErr.statusText}` :
+                    'Server or network error';
+        console.log(errMsg);
+    }
+);
+```
