@@ -1,8 +1,8 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpResponse, HttpResponseBase } from "@angular/common/http";
 import { AjaxOptions, AjaxResponse, IAjaxProvider, mergeAjaxOptions, Value } from "jinqu";
 import { IJsonConverter } from "./json-converter";
 
-export class AngularHttpProvider<TConverter extends IJsonConverter | void = void> implements IAjaxProvider<Response> {
+export class AngularHttpProvider<TConverter extends IJsonConverter | void = void> implements IAjaxProvider<HttpResponseBase> {
 
     public static readonly defaultOptions: AjaxOptions = {
         headers: {
@@ -14,7 +14,7 @@ export class AngularHttpProvider<TConverter extends IJsonConverter | void = void
 
     constructor(protected http: HttpClient, protected jsonConverter?: TConverter) { }
 
-    public ajax<T>(o: AjaxOptions): Promise<Value<T> & AjaxResponse<Response>> {
+    public ajax<T>(o: AjaxOptions): Promise<Value<T> & AjaxResponse<HttpResponseBase>> {
         if (o.params && o.params.length) {
             o.url += "?" + o.params.map((p) => `${p.key}=${encodeURIComponent(p.value)}`).join("&");
         }
@@ -39,38 +39,19 @@ export class AngularHttpProvider<TConverter extends IJsonConverter | void = void
             responseType: 'blob',
             //withCredentials: ngWithCredentials
         }).toPromise()
-            .then((ngResponse?: HttpResponse<Blob>) => {
-                if (!ngResponse) {
+            .then((response?: HttpResponse<Blob>) => {
+                if (!response) {
                     return Promise.reject(new Error("Request failed"));
                 }
-                // vanilla
-                /*const respHeaders = new Headers();
-                ngResponse.headers.keys().forEach((key: string) => {
-                    respHeaders.append(key, ngResponse.headers.get(key)!);
-                });
-                */
-                // hackish
-                const respHeaders = ngResponse.headers.keys().reduce(((ret, key: string) => (ret[key] = ngResponse.headers.get(key)) && ret), {} as any);
-
-                const response = new Response(ngResponse.body, {
-                    headers: respHeaders,
-                    status: ngResponse.status,
-                    statusText: ngResponse.statusText
-                });
 
                 // body stream read
                 return response.body ?
-                    response.text().then((txtVal: string) => {
+                    response.body.text().then((txtVal: string) => {
                         const reviver = this.jsonConverter? this.jsonConverter.revive : void 0;
                         const value = JSON.parse(txtVal, reviver);
                         return { value, response };
                     }) :
                     { response };
-
-                // body stream NOT read
-                /*return ngResponse.body?.text()
-                    .then((txtVal: string) => ({ value: JSON.parse(txtVal), response });
-                */
             },
             (error: HttpErrorResponse) => {
                 if (error.status !== 0) {

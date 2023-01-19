@@ -46,7 +46,7 @@ describe('HttpClient tests', () => {
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         reqMock.flush(
             new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' }),
-            { headers: { 'content-length': '2' } }
+            { headers: { 'content-length': '2', 'content-type': 'application/json' } }
         );
     }));
 
