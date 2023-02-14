@@ -3,7 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { AngularHttpProvider, JsonDateConverter, JsonDateOnlyConverter, JsonDateTimeOffsetConverter } from '../index';
+import { 
+    AngularHttpProvider, 
+    JsonDateConverter, 
+    JsonDateOnlyConverter, 
+    JsonDateTimeOffsetConverter
+} from '../index';
 import { JsonTestConverter } from './fixture';
 
 const emptyResponse = {};
@@ -237,4 +242,30 @@ describe('HttpClient tests', () => {
             }
         );
     }));
+
+    it('should preserve timezone in request', waitForAsync(() => {
+        const fetchProvider = new AngularHttpProvider(http, JsonDateTimeOffsetConverter);
+
+        const url = 'resource(123)';
+        const resIn = {
+            id: 123,
+            dt: new Date(2022, 1, 24, 4, 31),
+        };
+        const resOut = {
+            id: 123,
+            //dt: dateToISOLocalString(resIn.dt),
+            dt: '2022-02-24T04:31:00.000+02:00',
+        };
+
+        fetchProvider.ajax({ url, method: 'POST', data: resIn })
+            .then(r => {
+                expect(r.value).toEqual(void 0);
+                expect(reqMock.request.body).toEqual(JSON.stringify(resOut));
+                expect(reqMock.request.method).toEqual('POST');
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'POST', url });
+        reqMock.flush(null);
+    }));
+
 });
