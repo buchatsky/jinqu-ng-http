@@ -31,8 +31,8 @@ import { AngularHttpProvider, JsonDateConverter } from 'jinqu-ng-http';
 const ngHttpProv = new AngularHttpProvider(http, JsonDateConverter);
 ```
 Built-in converters makes conversion from string to Date object if a property value matches the respective RegExp mask:
-- JsonDateOnlyConverter: convertes OData Date values (e.g. '2012-12-03');
-- JsonDateTimeOffsetConverter: convertes DateTimeOffset values (e.g. '2012-12-03T07:16:23Z');
+- JsonDateOnlyConverter: convertes OData Date values (e.g. '2012-12-03') to JS Date on receive;
+- JsonDateTimeOffsetConverter: convertes DateTimeOffset values (e.g. '2012-12-03T07:16:23Z') to JS Date on receive, stringifies JS Date to ISO 8601 Extended Format with local timezone;
 - JsonDateConverter: covers both cases.
 
 You may want to use [ts-odata-model-gen](https://github.com/buchatsky/ts-odata-model-gen) with --useDateProps option to generate data models with

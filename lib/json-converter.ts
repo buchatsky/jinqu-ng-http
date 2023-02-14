@@ -52,4 +52,13 @@ export class JsonDateConverter /*implements IJsonConverter*/ {
             return value;
         }
     }
+
+    public static replace(this: any, key: string, value: any): any {
+        let origValue = this[key];
+        if (origValue instanceof Date && !isNaN(origValue.valueOf())) {
+            return dateToISOLocalString(origValue);
+        } else {
+            return value;
+        }
+    }
 }
