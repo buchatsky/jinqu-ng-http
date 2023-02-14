@@ -4,19 +4,21 @@ for the [jinqu-odata](https://github.com/jin-qu/jinqu-odata) ODataService.<br/>
 Usage:<br/>
 ```
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { ODataService, IODataQuery, ODataQuery } from 'jinqu-odata';
-
+import { HttpClient, HttpResponseBase } from "@angular/common/http";
+import { ODataService, ODataQuery } from 'jinqu-odata';
+import { AjaxOptions } from "jinqu";
 import { AngularHttpProvider } from 'jinqu-ng-http';
 import { Product } from '../model/all-models';
 
+export type NgODataQuery<T extends object> = ODataQuery<T, AjaxOptions, HttpResponseBase>;
+
 @Injectable()
-export class NorthwindContext extends ODataService {
+export class NorthwindContext extends ODataService<HttpResponseBase> {
   constructor(http: HttpClient) {
     super('api/', new AngularHttpProvider(http));
   }
 
-  get products(): IODataQuery<Product> { return this.createQuery<Product>('products'); }
+  get products(): NgODataQuery<Product> { return this.createQuery<Product>('products'); }
 }
 ```
 # Date/Time values
@@ -43,7 +45,7 @@ You can also write your own implementation of IJsonConverter interface in order 
 ```
 export class SomeJsonConverter {
     // receive
-    public static revive(key: string, value: any): any {
+    public static revive(this: any, key: string, value: any): any {
         if (typeof value === 'string' && value === "orange") {
             return "potatoes";
         } else {
@@ -51,7 +53,7 @@ export class SomeJsonConverter {
         }
     }
     // send
-    public static replace(key: string, value: any): any {
+    public static replace(this: any, key: string, value: any): any {
         if (typeof value === 'string' && key === "product") {
             return 'orange';
         } else {
