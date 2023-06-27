@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-// waitForAsync is used if the test body contains async calls, no need in Jasmine's done()
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 import { 
@@ -19,24 +18,23 @@ describe('HttpClient tests', () => {
     let http: HttpClient;
     //let fetchProvider: AngularHttpProvider;
 
-    // must be waitForAsync'ed if tests are waitForAsync'ed
-    beforeEach(waitForAsync(() => {
+    beforeEach(() => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ],
             //providers: [ AngularHttpProvider ] // if @Inject'ed
         });
 
-        httpMock = TestBed.inject(HttpTestingController);
         http = TestBed.inject(HttpClient);
+        httpMock = TestBed.inject(HttpTestingController);
         //fetchProvider = new AngularHttpProvider(http);
-    }));
+    });
 
-    // must be waitForAsync'ed if tests are waitForAsync'ed
-    afterEach(waitForAsync(() => {
+    afterEach((() => {
         httpMock.verify();
     }));
 
-    it('should get http headers & value', waitForAsync(() => {
+    it('should get http headers & json value', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http);
 
         const url = 'Companies';
@@ -46,6 +44,7 @@ describe('HttpClient tests', () => {
                 expect(r.response.headers.get('content-type')).toEqual('application/json');
                 expect(r.response.headers.get('content-length')).toEqual('2');
                 expect(reqMock.request.method).toEqual('GET');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
@@ -53,38 +52,62 @@ describe('HttpClient tests', () => {
             new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' }),
             { headers: { 'content-length': '2', 'content-type': 'application/json' } }
         );
-    }));
+    });
 
-    it('should return null value', waitForAsync(() => {
+    it('should get a string value', (done: DoneFn) => {
+        const fetchProvider = new AngularHttpProvider(http);
+        const blob = new Blob(['qwerty']);
+
+        const url = 'Companies(3)/GetReport()';
+        fetchProvider.ajax({ url })
+            .then(r => {
+                expect(r.value).toEqual('qwerty');
+                expect(r.response.headers.get('content-type')).toEqual('text/plain');
+                expect(r.response.headers.get('content-length')).toEqual('6');
+                expect(reqMock.request.method).toEqual('GET');
+                done();
+            });
+
+        const reqMock = httpMock.expectOne({ method: 'GET', url });
+        reqMock.flush(
+            new Blob(['qwerty'], { type: 'text/plain' }),
+            { headers: { 'content-length': '6', 'content-type': 'text/plain' } }
+        );
+    });
+
+    it('should return null value', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http);
 
         const url = 'Companies';
         fetchProvider.ajax({ url })
             .then(r => {
                 expect(r.value).toBeNull();
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         reqMock.flush(
-            new Blob([JSON.stringify(null)], { type: 'application/json' })
+            new Blob([JSON.stringify(null)], { type: 'application/json' }),
+            { headers: { 'content-length': '4', 'content-type': 'application/json' } }
         );
 
-    }));
+    });
 
-    it('should return undefined value', waitForAsync(() => {
+    it('should return undefined value', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http);
 
         const url = 'Companies';
         fetchProvider.ajax({ method: 'PUT', url })
             .then(r => {
                 expect(r.value).toBeUndefined();
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'PUT', url });
         reqMock.flush(null, { status: 204, statusText: 'No Content' });
-    }));
+    });
 
-    it('should throw when timeout elapsed', waitForAsync(() => {
+    it('should throw when timeout elapsed', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http);
 
         const url = 'Companies';
@@ -92,7 +115,10 @@ describe('HttpClient tests', () => {
             url,
             timeout: 1
         });
-        expectAsync(prom).toBeRejectedWithError('Request timed out');
+        expectAsync(prom).toBeRejectedWithError('Request timed out')
+            .then(() => {
+                done();
+            });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         setTimeout(() => {
@@ -100,9 +126,9 @@ describe('HttpClient tests', () => {
                 new Blob([JSON.stringify(emptyResponse)], { type: 'application/json' })
             );
         }, 10);
-    }));
+    });
 
-    it('should revive any Date in response', waitForAsync(() => {
+    it('should revive any Date in response', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http, JsonDateConverter);
 
         const url = 'Companies(123)';
@@ -123,15 +149,17 @@ describe('HttpClient tests', () => {
             .then(r => {
                 expect(r.value).toEqual(resOut);
                 expect(reqMock.request.method).toEqual('GET');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         reqMock.flush(
-            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' }),
+            { headers: { 'content-type': 'application/json' } }
         );
-    }));
+    });
 
-    it('should revive Date only in response', waitForAsync(() => {
+    it('should revive Date only in response', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http, JsonDateOnlyConverter);
 
         const url = 'Companies(123)';
@@ -152,15 +180,17 @@ describe('HttpClient tests', () => {
             .then(r => {
                 expect(r.value).toEqual(resOut);
                 expect(reqMock.request.method).toEqual('GET');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         reqMock.flush(
-            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' }),
+            { headers: { 'content-type': 'application/json' } }
         );
-    }));
+    });
 
-    it('should revive DateTimeOffset only in response', waitForAsync(() => {
+    it('should revive DateTimeOffset only in response', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http, JsonDateTimeOffsetConverter);
 
         const url = 'resource(123)';
@@ -181,15 +211,17 @@ describe('HttpClient tests', () => {
             .then(r => {
                 expect(r.value).toEqual(resOut);
                 expect(reqMock.request.method).toEqual('GET');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
         reqMock.flush(
-            new Blob([JSON.stringify(resIn)], {  type: 'application/json' })
+            new Blob([JSON.stringify(resIn)], {  type: 'application/json' }),
+            { headers: { 'content-type': 'application/json' } }
         );
-    }));
+    });
 
-    it('should replace fld2 in request', waitForAsync(() => {
+    it('should replace fld2 in request', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http, JsonTestConverter);
 
         const url = 'resource(123)';
@@ -209,13 +241,14 @@ describe('HttpClient tests', () => {
                 expect(r.value).toEqual(void 0);
                 expect(reqMock.request.body).toEqual(JSON.stringify(resOut));
                 expect(reqMock.request.method).toEqual('POST');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'POST', url });
         reqMock.flush(null);
-    }));
+    });
 
-    it('should get odata error', waitForAsync(() => {
+    it('should get odata error', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http);
 
         const url = 'Companies';
@@ -231,6 +264,7 @@ describe('HttpClient tests', () => {
             expect(e.status).toEqual(400);
             expect(e.error.error.code).toEqual("400.101");
             expect(e.error.error.message).toEqual("Field is required");
+            done();
         });
 
         const reqMock = httpMock.expectOne({ method: 'GET', url });
@@ -241,9 +275,9 @@ describe('HttpClient tests', () => {
                 headers: { 'content-type': 'application/json' } 
             }
         );
-    }));
+    });
 
-    it('should preserve timezone in request', waitForAsync(() => {
+    it('should preserve timezone in request', (done: DoneFn) => {
         const fetchProvider = new AngularHttpProvider(http, JsonDateTimeOffsetConverter);
 
         const url = 'resource(123)';
@@ -262,10 +296,11 @@ describe('HttpClient tests', () => {
                 expect(r.value).toEqual(void 0);
                 expect(reqMock.request.body).toEqual(JSON.stringify(resOut));
                 expect(reqMock.request.method).toEqual('POST');
+                done();
             });
 
         const reqMock = httpMock.expectOne({ method: 'POST', url });
         reqMock.flush(null);
-    }));
+    });
 
 });

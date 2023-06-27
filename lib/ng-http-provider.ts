@@ -46,9 +46,11 @@ export class AngularHttpProvider<TConverter extends IJsonConverter | void = void
 
                 // body stream read
                 return response.body ?
-                    response.body.text().then((txtVal: string) => {
-                        const reviver = this.jsonConverter? this.jsonConverter.revive : void 0;
-                        const value = JSON.parse(txtVal, reviver);
+                    response.body.text().then((value: string) => {
+                        if (response.headers.get("content-type")?.split(';')[0] === "application/json") {
+                            const reviver = this.jsonConverter? this.jsonConverter.revive : void 0;
+                            value = JSON.parse(value, reviver);
+                        }
                         return { value, response };
                     }) :
                     { response };
