@@ -19,7 +19,7 @@ describe('HttpClient tests', () => {
     //let fetchProvider: AngularHttpProvider;
 
     beforeEach(() => {
-        jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+        //jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ],
             //providers: [ AngularHttpProvider ] // if @Inject'ed
